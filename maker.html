@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QR Maker</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f8fa;
+      --panel: #ffffff;
+      --ink: #17202a;
+      --muted: #5c6675;
+      --line: #d7dde6;
+      --accent: #0b63ce;
+      --accent-ink: #ffffff;
+      --ok: #147a52;
+      --warn: #9b5b00;
+      --danger: #b42318;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(280px, 390px) minmax(360px, 1fr);
+      gap: 18px;
+      width: min(1180px, calc(100vw - 28px));
+      margin: 18px auto;
+    }
+
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .controls {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-self: start;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.25;
+    }
+
+    .sub {
+      margin: -8px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    input, select, button {
+      font: inherit;
+    }
+
+    input[type="file"], input[type="number"], select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      color: var(--ink);
+      padding: 10px 11px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      color: var(--ink);
+      padding: 10px 12px;
+      cursor: pointer;
+      min-height: 40px;
+    }
+
+    button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--accent-ink);
+      font-weight: 700;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .5;
+    }
+
+    .checkline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .stats {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+      font-size: 13px;
+    }
+
+    .stats div {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .stats span:first-child { color: var(--muted); }
+    .stats span:last-child {
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+      overflow-wrap: anywhere;
+    }
+
+    .stage {
+      min-height: calc(100vh - 36px);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+    }
+
+    .stage-head, .stage-foot {
+      padding: 13px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .stage-foot {
+      border-top: 1px solid var(--line);
+      border-bottom: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      border-radius: 999px;
+      padding: 4px 10px;
+      background: #eaf2ff;
+      color: #074b9b;
+      font-weight: 750;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .qr-wrap {
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: #f2f4f8;
+    }
+
+    canvas {
+      width: min(76vh, 100%);
+      height: auto;
+      max-width: 820px;
+      border: 12px solid #fff;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, .12);
+      image-rendering: pixelated;
+    }
+
+    .empty {
+      display: grid;
+      place-items: center;
+      width: min(76vh, 100%);
+      aspect-ratio: 1;
+      border: 1px dashed #aeb7c4;
+      border-radius: 8px;
+      color: var(--muted);
+      background: #fff;
+      text-align: center;
+      padding: 28px;
+    }
+
+    progress {
+      width: 100%;
+      height: 10px;
+      accent-color: var(--accent);
+    }
+
+    .status {
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
+
+    .error { color: var(--danger); }
+    .ok { color: var(--ok); }
+
+    @media (max-width: 820px) {
+      main {
+        grid-template-columns: 1fr;
+        width: min(100vw - 18px, 720px);
+        margin: 9px auto;
+      }
+      .stage { min-height: auto; }
+      canvas, .empty { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="controls">
+      <h1>QR 만들기</h1>
+      <p class="sub">파일을 QR 코드로 만듭니다.</p>
+
+      <label>
+        파일
+        <input id="fileInput" type="file">
+      </label>
+
+      <div class="grid2">
+        <label>
+          조각 크기
+          <input id="chunkSize" type="number" min="400" max="2200" step="50" value="1400">
+        </label>
+        <label>
+          오류 정정
+          <select id="ecl">
+            <option value="M" selected>M - 권장</option>
+            <option value="Q">Q - 더 안정적</option>
+            <option value="L">L - 더 빠름</option>
+            <option value="H">H - 최대 보정</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="grid2">
+        <label>
+          표시 간격(ms)
+          <input id="intervalMs" type="number" min="120" max="5000" step="10" value="420">
+        </label>
+        <label>
+          프레임 이동
+          <input id="frameRange" type="range" min="0" max="0" value="0" disabled>
+        </label>
+      </div>
+
+      <label class="checkline">
+        <input id="loopToggle" type="checkbox" checked>
+        끝까지 가면 처음부터 반복
+      </label>
+
+      <div class="button-row">
+        <button id="buildBtn" class="primary">QR 만들기</button>
+        <button id="prevBtn" disabled>이전</button>
+        <button id="nextBtn" disabled>다음</button>
+        <button id="playBtn" disabled>재생</button>
+        <button id="pauseBtn" disabled>정지</button>
+        <button id="fullBtn" disabled>전체 화면</button>
+      </div>
+
+      <progress id="progress" max="1" value="0"></progress>
+
+      <div class="stats">
+        <div><span>상태</span><span id="status">파일을 선택하세요.</span></div>
+        <div><span>파일</span><span id="fileStat">-</span></div>
+        <div><span>세션</span><span id="sidStat">-</span></div>
+        <div><span>QR 수</span><span id="countStat">-</span></div>
+        <div><span>현재</span><span id="currentStat">-</span></div>
+        <div><span>QR 버전</span><span id="versionStat">-</span></div>
+      </div>
+    </section>
+
+    <section class="stage" id="stage">
+      <div class="stage-head">
+        <strong id="stageTitle">대기</strong>
+        <span class="badge" id="frameBadge">0 / 0</span>
+      </div>
+      <div class="qr-wrap">
+        <canvas id="qrCanvas" hidden></canvas>
+        <div class="empty" id="emptyState">QR을 만들면 여기에 크게 표시됩니다.</div>
+      </div>
+      <div class="stage-foot">
+        <span id="frameType">-</span>
+        <span id="payloadStat">-</span>
+      </div>
+    </section>
+  </main>
+
+  <script src="qr-core.js"></script>
+  <script src="qrcode.js"></script>
+  <script>
+    const els = {
+      fileInput: document.getElementById("fileInput"),
+      chunkSize: document.getElementById("chunkSize"),
+      ecl: document.getElementById("ecl"),
+      intervalMs: document.getElementById("intervalMs"),
+      loopToggle: document.getElementById("loopToggle"),
+      frameRange: document.getElementById("frameRange"),
+      buildBtn: document.getElementById("buildBtn"),
+      prevBtn: document.getElementById("prevBtn"),
+      nextBtn: document.getElementById("nextBtn"),
+      playBtn: document.getElementById("playBtn"),
+      pauseBtn: document.getElementById("pauseBtn"),
+      fullBtn: document.getElementById("fullBtn"),
+      progress: document.getElementById("progress"),
+      status: document.getElementById("status"),
+      fileStat: document.getElementById("fileStat"),
+      sidStat: document.getElementById("sidStat"),
+      countStat: document.getElementById("countStat"),
+      currentStat: document.getElementById("currentStat"),
+      versionStat: document.getElementById("versionStat"),
+      stage: document.getElementById("stage"),
+      stageTitle: document.getElementById("stageTitle"),
+      frameBadge: document.getElementById("frameBadge"),
+      frameType: document.getElementById("frameType"),
+      payloadStat: document.getElementById("payloadStat"),
+      qrCanvas: document.getElementById("qrCanvas"),
+      emptyState: document.getElementById("emptyState"),
+    };
+
+    const state = {
+      result: null,
+      frames: [],
+      index: 0,
+      timer: null,
+      lastQr: null,
+    };
+
+    els.buildBtn.addEventListener("click", buildFrames);
+    els.prevBtn.addEventListener("click", () => moveFrame(-1));
+    els.nextBtn.addEventListener("click", () => moveFrame(1));
+    els.playBtn.addEventListener("click", play);
+    els.pauseBtn.addEventListener("click", pause);
+    els.fullBtn.addEventListener("click", () => els.stage.requestFullscreen && els.stage.requestFullscreen());
+    els.frameRange.addEventListener("input", () => showFrame(Number(els.frameRange.value)));
+    els.ecl.addEventListener("change", () => state.frames.length && showFrame(state.index));
+
+    async function buildFrames() {
+      pause();
+      const file = els.fileInput.files[0];
+      if (!file) {
+        setStatus("파일을 먼저 선택하세요.", "error");
+        return;
+      }
+      const chunkChars = clampInt(els.chunkSize.value, 400, 2200);
+      els.chunkSize.value = String(chunkChars);
+      setBusy(true);
+      setStatus("파일을 읽고 해시를 계산하는 중...");
+      try {
+        const result = await QRMaker.makeFrames(file, chunkChars);
+        state.result = result;
+        state.frames = result.frames;
+        state.index = 0;
+        els.frameRange.max = String(state.frames.length - 1);
+        els.frameRange.disabled = false;
+        els.progress.max = state.frames.length;
+        els.fileStat.textContent = `${file.name || "unnamed"} (${QRMaker.formatBytes(file.size)})`;
+        els.sidStat.textContent = result.sid;
+        els.countStat.textContent = `${result.data.length} data + 1 meta`;
+        enableTransport(true);
+        showFrame(0);
+        setStatus("QR 생성 완료. 재생 또는 수동 탐색 가능.", "ok");
+      } catch (error) {
+        setStatus(error.message || String(error), "error");
+        enableTransport(false);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    function showFrame(index) {
+      if (!state.frames.length) return;
+      pause(false);
+      state.index = Math.max(0, Math.min(index, state.frames.length - 1));
+      const frame = state.frames[state.index];
+      try {
+        const qr = AirgapQR.encodeText(frame, { ecl: els.ecl.value });
+        const render = AirgapQR.drawToCanvas(els.qrCanvas, qr, { targetSize: 900 });
+        state.lastQr = qr;
+        els.qrCanvas.hidden = false;
+        els.emptyState.hidden = true;
+        els.frameRange.value = String(state.index);
+        els.progress.value = state.index + 1;
+        els.stageTitle.textContent = state.index === 0 ? "메타데이터 QR" : "데이터 QR";
+        els.frameBadge.textContent = `${state.index + 1} / ${state.frames.length}`;
+        els.currentStat.textContent = `${state.index + 1} / ${state.frames.length}`;
+        els.versionStat.textContent = `v${qr.version} / ECC ${qr.ecl} / mask ${qr.mask} / ${render.modulePx}px`;
+        els.frameType.textContent = state.index === 0 ? "파일명, 크기, SHA-256" : `chunk ${state.index} / ${state.result.total}`;
+        els.payloadStat.textContent = `${frame.length.toLocaleString()} chars`;
+      } catch (error) {
+        setStatus(`${error.message} 현재 조각 크기를 줄이세요.`, "error");
+      }
+    }
+
+    function moveFrame(delta) {
+      if (!state.frames.length) return;
+      let next = state.index + delta;
+      if (next < 0) next = els.loopToggle.checked ? state.frames.length - 1 : 0;
+      if (next >= state.frames.length) next = els.loopToggle.checked ? 0 : state.frames.length - 1;
+      showFrame(next);
+    }
+
+    function play() {
+      if (!state.frames.length || state.timer) return;
+      els.playBtn.disabled = true;
+      els.pauseBtn.disabled = false;
+      state.timer = setInterval(() => {
+        if (state.index >= state.frames.length - 1 && !els.loopToggle.checked) {
+          pause();
+          return;
+        }
+        moveFrame(1);
+      }, clampInt(els.intervalMs.value, 120, 5000));
+    }
+
+    function pause(updateButtons = true) {
+      if (state.timer) clearInterval(state.timer);
+      state.timer = null;
+      if (updateButtons && state.frames.length) {
+        els.playBtn.disabled = false;
+        els.pauseBtn.disabled = true;
+      }
+    }
+
+    function setBusy(busy) {
+      els.buildBtn.disabled = busy;
+      els.buildBtn.textContent = busy ? "처리 중" : "QR 만들기";
+    }
+
+    function enableTransport(enabled) {
+      els.prevBtn.disabled = !enabled;
+      els.nextBtn.disabled = !enabled;
+      els.playBtn.disabled = !enabled;
+      els.pauseBtn.disabled = true;
+      els.fullBtn.disabled = !enabled;
+    }
+
+    function setStatus(message, type) {
+      els.status.textContent = message;
+      els.status.className = type || "";
+    }
+
+    function clampInt(value, min, max) {
+      const n = Number.parseInt(value, 10);
+      if (!Number.isFinite(n)) return min;
+      return Math.max(min, Math.min(max, n));
+    }
+  </script>
+</body>
+</html>
