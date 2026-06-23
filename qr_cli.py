@@ -216,18 +216,18 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="QR PNG generator.")
     parser.add_argument("file", type=Path, help="File to encode.")
     parser.add_argument("--out", type=Path, default=Path("qr-out"), help="Output directory.")
-    parser.add_argument("--chunk-size", type=int, default=1400, help="Base64URL characters per data QR.")
+    parser.add_argument("--chunk-size", type=int, default=300, help="Base64URL characters per data QR.")
     parser.add_argument("--ecc", choices=["L", "M", "Q", "H"], default="M", help="QR error correction level.")
     parser.add_argument("--box-size", type=int, default=6, help="Pixels per QR module.")
     parser.add_argument("--border", type=int, default=4, help="Quiet-zone modules.")
-    parser.add_argument("--interval", type=int, default=420, help="Slideshow interval in ms.")
+    parser.add_argument("--interval", type=int, default=300, help="Slideshow interval in ms.")
     parser.add_argument("--clean", action="store_true", help="Delete the output directory before writing.")
     args = parser.parse_args()
 
     if not args.file.is_file():
         raise SystemExit(f"File not found: {args.file}")
-    if args.chunk_size < 400 or args.chunk_size > 2200:
-        raise SystemExit("--chunk-size must be between 400 and 2200")
+    if args.chunk_size < 100 or args.chunk_size > 2200:
+        raise SystemExit("--chunk-size must be between 100 and 2200")
     if args.clean and args.out.exists():
         shutil.rmtree(args.out)
     args.out.mkdir(parents=True, exist_ok=True)

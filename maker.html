@@ -259,7 +259,7 @@
       <div class="grid2">
         <label>
           조각 크기
-          <input id="chunkSize" type="number" min="400" max="2200" step="50" value="1400">
+          <input id="chunkSize" type="number" min="100" max="2200" step="10" value="300">
         </label>
         <label>
           오류 정정
@@ -275,7 +275,7 @@
       <div class="grid2">
         <label>
           표시 간격(ms)
-          <input id="intervalMs" type="number" min="120" max="5000" step="10" value="420">
+          <input id="intervalMs" type="number" min="100" max="5000" step="10" value="300">
         </label>
         <label>
           프레임 이동
@@ -371,7 +371,7 @@
     els.playBtn.addEventListener("click", play);
     els.pauseBtn.addEventListener("click", pause);
     els.fullBtn.addEventListener("click", () => els.stage.requestFullscreen && els.stage.requestFullscreen());
-    els.frameRange.addEventListener("input", () => showFrame(Number(els.frameRange.value)));
+    els.frameRange.addEventListener("input", () => { pause(); showFrame(Number(els.frameRange.value)); });
     els.ecl.addEventListener("change", () => state.frames.length && showFrame(state.index));
 
     async function buildFrames() {
@@ -381,7 +381,7 @@
         setStatus("파일을 먼저 선택하세요.", "error");
         return;
       }
-      const chunkChars = clampInt(els.chunkSize.value, 400, 2200);
+      const chunkChars = clampInt(els.chunkSize.value, 100, 2200);
       els.chunkSize.value = String(chunkChars);
       setBusy(true);
       setStatus("파일을 읽고 해시를 계산하는 중...");
@@ -409,7 +409,6 @@
 
     function showFrame(index) {
       if (!state.frames.length) return;
-      pause(false);
       state.index = Math.max(0, Math.min(index, state.frames.length - 1));
       const frame = state.frames[state.index];
       try {

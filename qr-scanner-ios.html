@@ -10637,8 +10637,8 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
         state.stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: { ideal: "environment" },
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
           },
           audio: false,
         });
@@ -10679,7 +10679,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
           state.busyDetecting = false;
         }
       }
-      setTimeout(() => requestAnimationFrame(scanLoop), 120);
+      setTimeout(() => requestAnimationFrame(scanLoop), 60);
     }
 
     async function scanImageFile() {
@@ -10732,7 +10732,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
       canvas.height = height;
       ctx.drawImage(source, 0, 0, width, height);
       const imageData = ctx.getImageData(0, 0, width, height);
-      const code = jsQR(imageData.data, width, height, { inversionAttempts: "dontInvert" });
+      const code = jsQR(imageData.data, width, height, { inversionAttempts: "attemptBoth" });
       return code && code.data ? code.data : "";
     }
 
